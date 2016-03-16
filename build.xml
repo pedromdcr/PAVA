@@ -1,0 +1,59 @@
+<project name="BoxingProfiler" default="build" basedir=".">
+
+	<property name="src.dir" value="src" />
+	<property name="classes.dir" value="classes" />
+	<property name="jar.file" value="profiler" />
+	<property name="lib.dir" location="lib" />
+
+	<path id="classes.classpath">
+		<pathelement location="${lib.dir}/javassist.jar" />
+		<pathelement location="${jar.file}.jar" />
+	</path>
+
+	<pathconvert property="manifest.classpath" pathsep=" ">
+		<path refid="classes.classpath" />
+		<mapper>
+			<chainedmapper>
+				<flattenmapper />
+				<globmapper from="*.jar" to="${lib.dir}/*.jar" />
+			</chainedmapper>
+		</mapper>
+	</pathconvert>
+
+	<target name="init" description="Create working dirs">
+		<mkdir dir="${classes.dir}" />
+	</target>
+
+	<target name="clean" description="Delete old work and dist directories">
+		<delete dir="${classes.dir}" />
+	</target>
+
+	<target name="compile"
+		depends="init">
+		<javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}"
+			debug="true">
+			<classpath>
+				<fileset dir="${lib.dir}">
+					<include name="*.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="dist" depends="compile"
+		description="Create jar file for binary distribution">
+		<jar jarfile="${jar.file}.jar">
+			<fileset dir="${classes.dir}" />
+			<fileset dir="${src.dir}" />
+			<!-- define MANIFEST.MF -->
+			<manifest>
+				<attribute name="Main-Class" value="ist.meic.pa.Profiler" />
+				<attribute name="Class-Path" value="${manifest.classpath}" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="build" depends="dist"
+		description="Builds the project and generate a jar">
+	</target>
+</project>
