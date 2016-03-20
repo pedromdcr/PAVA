@@ -1,5 +1,8 @@
 package ist.meic.pa;
 import javassist.*;
+
+import java.lang.Throwable;
+import java.util.Arrays;
 public class MyProfiler implements  Translator {
 
 
@@ -19,7 +22,14 @@ public class MyProfiler implements  Translator {
 
 	public void addprofile(ClassPool pool, final CtClass ctClass){
 		if (!ctClass.getName().equals("ist.meic.pa.BoxingPorfiler")
-				&& !ctClass.getName().contains("javassist")) {}
+				&& !ctClass.getName().contains("javassist")) {
+			for(CtMethod method : ctClass.getDeclaredMethods()){
+				Arrays.toString(Thread.currentThread().getStackTrace());
+				
+				
+				
+			}
+		}
 		
 	}
 }

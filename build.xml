@@ -1,59 +1,48 @@
-<project name="BoxingProfiler" default="build" basedir=".">
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="BoxingProfiler" default="run" basedir=".">
 
-	<property name="src.dir" value="src" />
-	<property name="classes.dir" value="classes" />
-	<property name="jar.file" value="profiler" />
-	<property name="lib.dir" location="lib" />
+  <property name="ant.build.javac.source" value="1.7"/>
+  <property name="ant.build.javac.target" value="1.7"/>
 
-	<path id="classes.classpath">
-		<pathelement location="${lib.dir}/javassist.jar" />
-		<pathelement location="${jar.file}.jar" />
-	</path>
+  <property name="javac.encoding" value="UTF-8"/>
+  <property name="java.file.encoding" value="UTF-8"/>
+  
+  <property name="src.dir" value="src"/>
+  <property name="classes.dir" value="classes"/>
+  
 
-	<pathconvert property="manifest.classpath" pathsep=" ">
-		<path refid="classes.classpath" />
-		<mapper>
-			<chainedmapper>
-				<flattenmapper />
-				<globmapper from="*.jar" to="${lib.dir}/*.jar" />
-			</chainedmapper>
-		</mapper>
-	</pathconvert>
 
-	<target name="init" description="Create working dirs">
-		<mkdir dir="${classes.dir}" />
-	</target>
 
-	<target name="clean" description="Delete old work and dist directories">
-		<delete dir="${classes.dir}" />
-	</target>
+  <path id="project.classpath">
+  	<pathelement location="${classes.dir}" />
+  </path>
+  
+  <target name="init">
+    <echo message="Preparing the project for build..."/>
+    <mkdir dir="${classes.dir}"/>
+  </target>
 
-	<target name="compile"
-		depends="init">
-		<javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}"
-			debug="true">
-			<classpath>
-				<fileset dir="${lib.dir}">
-					<include name="*.jar" />
-				</fileset>
-			</classpath>
-		</javac>
-	</target>
 
-	<target name="dist" depends="compile"
-		description="Create jar file for binary distribution">
-		<jar jarfile="${jar.file}.jar">
-			<fileset dir="${classes.dir}" />
-			<fileset dir="${src.dir}" />
-			<!-- define MANIFEST.MF -->
-			<manifest>
-				<attribute name="Main-Class" value="ist.meic.pa.BoxingProfiler" />
-				<attribute name="Class-Path" value="${manifest.classpath}" />
-			</manifest>
-		</jar>
-	</target>
+  <target name="compile" depends="init">
+  	<echo message="Compiling sources..." />
+  	    <javac srcdir="${src.dir}" destdir="${classes.dir}" classpath="./javassist.jar"/>
+  	
+  	</target>
 
-	<target name="build" depends="dist"
-		description="Builds the project and generate a jar">
-	</target>
+  <target name="run" depends="compile">
+    <jar destfile="${src.dir}/../profiler.jar">
+        <manifest>
+            <attribute name="Main-Class" value="ist.meic.pa.BoxingProfiler"/>
+        	<attribute name="Class-Path" value="."/>
+        </manifest>
+        <fileset dir="${classes.dir}"/>            
+        <zipfileset src="./javassist.jar"/>     
+    </jar>
+  </target>
+  
+  <target name="clean">
+    <delete dir="${classes.rel-dir}"/>
+  	
+ </target>
+
 </project>
