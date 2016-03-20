@@ -7,7 +7,7 @@ public class MyProfiler implements  Translator {
 	public void onLoad(ClassPool pool, String ClassName) throws NotFoundException,
 			CannotCompileException {
 		CtClass ctclass= pool.get(ClassName);
-		
+		addprofile(pool,ctclass);
 	}
 
 	@Override
@@ -17,5 +17,9 @@ public class MyProfiler implements  Translator {
 		
 	}
 
-
+	public void addprofile(ClassPool pool, final CtClass ctClass){
+		if (!ctClass.getName().equals("ist.meic.pa.BoxingPorfiler")
+				&& !ctClass.getName().contains("javassist")) {}
+		
+	}
 }
