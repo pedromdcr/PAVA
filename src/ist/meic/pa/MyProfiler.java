@@ -24,7 +24,8 @@ public class MyProfiler implements  Translator {
 		if (!ctClass.getName().equals("ist.meic.pa.BoxingPorfiler")
 				&& !ctClass.getName().contains("javassist")) {
 			for(CtMethod method : ctClass.getDeclaredMethods()){
-				Arrays.toString(Thread.currentThread().getStackTrace());
+				//System.out.println("vinho verde");
+				System.out.println(Thread.currentThread().getStackTrace());
 				
 				
 				
