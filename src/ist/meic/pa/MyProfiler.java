@@ -1,6 +1,11 @@
 package ist.meic.pa;
 import javassist.*;
-
+import javassist.bytecode.BadBytecode;
+import javassist.bytecode.analysis.ControlFlow;
+import javassist.bytecode.analysis.ControlFlow.Block;
+import javassist.bytecode.analysis.FramePrinter;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.lang.Throwable;
 import java.util.Arrays;
 public class MyProfiler implements  Translator {
@@ -25,9 +30,9 @@ public class MyProfiler implements  Translator {
 				&& !ctClass.getName().contains("javassist")) {
 			for(CtMethod method : ctClass.getDeclaredMethods()){
 				//System.out.println("vinho verde");
-				System.out.println(Thread.currentThread().getStackTrace());
-				
-				
+				PrintStream ps = new PrintStream(System.out, true);
+				FramePrinter fp = new FramePrinter(ps);
+				fp.print(method);
 				
 			}
 		}
