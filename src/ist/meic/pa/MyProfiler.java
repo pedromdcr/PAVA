@@ -98,7 +98,7 @@ public class MyProfiler implements Translator {
 			}
 		}
 		for (Map.Entry<String, Integer> entry : storage.entrySet()) {
-			System.out.println("Key: " + entry.getKey() + ". Value: " + entry.getValue());
+			System.out.println(method.getLongName() +" boxed " + entry.getValue()+" "+ entry.getKey() );
 		}
 		scanner.close();
 		System.out.println(s);
