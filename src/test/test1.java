@@ -17,7 +17,7 @@ public class test1 {
 
 	public static void main(String[] args) {
 		long start = System.currentTimeMillis();
-		printSum(sumOfIntegerUptoN(50));
+		printSum(sumOfIntegerUptoN(2));
 		long end = System.currentTimeMillis();
 		System.out.println("Time: " + (end - start));
 	}
