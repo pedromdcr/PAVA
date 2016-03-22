@@ -1,12 +1,12 @@
 package ist.meic.pa;
 
 import javassist.*;
-
 import javassist.bytecode.analysis.FramePrinter;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.Scanner;
@@ -29,14 +29,32 @@ public class MyProfiler implements Translator {
 	public void addprofile(ClassPool pool, final CtClass ctClass) {
 		if (!ctClass.getName().equals("ist.meic.pa.BoxingPorfiler") && !ctClass.getName().contains("javassist")) {
 			for (CtMethod method : ctClass.getDeclaredMethods()) {
-
-				/*
-				 * PrintStream ps = new PrintStream(System.out, true);
-				 * FramePrinter fp = new FramePrinter(ps); fp.print(method);
-				 * System.out.println(method.getLongName() + " boxed " +
-				 * printCounter(method) + " " + ;
-				 */
 				printCounter(method);
+			/*	
+				System.out.println("\n\n\n\n\n");
+				System.out.println(method.getName());
+				System.out.println("\n");
+				
+				try {
+					final String envolvingMethod = method.getName();
+					method.instrument(new ExprEditor() {
+						public void edit(MethodCall m)
+								throws CannotCompileException {
+							try{
+								
+								System.out.println();
+							//	System.out.println(m.getMethodName());
+								m.getMethod();						}
+							catch (NotFoundException e) {
+								e.printStackTrace();
+							}
+						}
+					});
+					
+
+				} catch (CannotCompileException e) {
+					e.printStackTrace();
+				}*/
 			}
 		}
 
@@ -45,7 +63,7 @@ public class MyProfiler implements Translator {
 	private String printCounter(CtMethod method) {
 		String delims = " |\\(";
 		String[] tok;
-		System.out.println("Todos os valueOf's identificados pelo print para o metodo: " + method.getLongName());
+		//System.out.println("Todos os valueOf's identificados pelo print para o metodo: " + method.getLongName());
 		TreeMap<String, Integer> storage = new TreeMap<String, Integer>();
 
 		// Creates the necessary Streams and Printers to read the ctMethod info
@@ -97,10 +115,11 @@ public class MyProfiler implements Translator {
 
 			}
 		}
-		for (Map.Entry<String, Integer> entry : storage.entrySet()) {
+		/*for (Map.Entry<String, Integer> entry : storage.entrySet()) {
 			System.out.println(method.getLongName() +" boxed " + entry.getValue()+" "+ entry.getKey() );
-		}
+		}*/
 		scanner.close();
+		//
 		System.out.println(s);
 
 		// TODO saves counts to a hash map or hash table to print as expected in
