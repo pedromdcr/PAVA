@@ -5,6 +5,7 @@ import javassist.bytecode.BadBytecode;
 import javassist.bytecode.ClassFile;
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.CodeIterator;
+import javassist.bytecode.InstructionPrinter;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.Mnemonic;
 import javassist.bytecode.analysis.FramePrinter;
@@ -39,12 +40,14 @@ public class MyProfiler implements Translator {
 
 	public void addprofile(ClassPool pool, final CtClass ctClass) throws BadBytecode {
 		if (!ctClass.getName().equals("ist.meic.pa.BoxingPorfiler") && !ctClass.getName().contains("javassist")) {
-			for (CtMethod method : ctClass.getDeclaredMethods()) {
+			for (final CtMethod method : ctClass.getDeclaredMethods()) {
 				//printCounter(method);
 				
 				System.out.println("\n\n\n\n\n");
 				System.out.println(method.getName());
 				System.out.println("\n");
+				
+				
 				
 				try {
 					method.instrument(
@@ -52,8 +55,8 @@ public class MyProfiler implements Translator {
 					            public void edit(MethodCall m)
 					                          throws CannotCompileException
 					            {
-					                System.out.println("Class: " + m.getClassName() + 
-					                					";\n" + "Method: " + m.getMethodName() + "\n\n");
+					            	String ms = m.getClassName() + "." + m.getMethodName();
+					            	System.out.println(ms);
 					            }
 					        });
 					
