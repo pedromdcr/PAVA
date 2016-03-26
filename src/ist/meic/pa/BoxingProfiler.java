@@ -57,16 +57,14 @@ public class BoxingProfiler {
 		return counterType;
 	}
 
-	public static void memoize(CtClass ctClass, CtMethod ctMethod, String [] order)
+	public static void memoize(CtClass ctClass, MethodCall m, String [] order)
 			throws CannotCompileException, NotFoundException {
 
 		// creates a field to store the counters for autoboxing and unboxing
 		// operations for the specified class
 		if(order[0]==null){return;}
-		for (String i : order) {
-			System.out.println(i);
-		}
-
+		
+		
 		
 		
 		
@@ -124,7 +122,7 @@ public class BoxingProfiler {
 					}
 
 					try {
-						memoize(ctClass, method, counterType);
+						memoize(ctClass, m, counterType);
 					} catch (NotFoundException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
