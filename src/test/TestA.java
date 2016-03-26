@@ -1,3 +1,5 @@
+package test;
+
 public class TestA {
 	
 	public static double test(Long l) {

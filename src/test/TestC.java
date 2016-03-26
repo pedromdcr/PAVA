@@ -1,3 +1,5 @@
+package test;
+
 public class TestC {
 	
 	public static long test(Long l) {

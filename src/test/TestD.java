@@ -1,3 +1,5 @@
+package test;
+
 public class TestD {
 
 	public static Object identity(Object o) {

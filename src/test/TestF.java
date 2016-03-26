@@ -1,3 +1,5 @@
+package test;
+
 public class TestF {
 
 	public static Boolean identity(boolean o) { return o; }
