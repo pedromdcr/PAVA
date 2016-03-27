@@ -22,97 +22,118 @@ public class MyProfiler implements Translator {
 
 	public void onLoad(ClassPool pool, String className) throws NotFoundException, CannotCompileException {
 		_ctClass = pool.get(className);
-
-		make(pool, _ctClass);
+		make(pool);
 	}
 
-	void make(ClassPool pool, CtClass ctClass) throws NotFoundException, CannotCompileException {
+	protected void make(ClassPool pool) throws NotFoundException, CannotCompileException {
 		//System.out.println("-> MyProfiler.make");
 
-		for (CtMethod ctMethod : ctClass.getDeclaredMethods()) {
+		for (CtMethod ctMethod : _ctClass.getDeclaredMethods()) {
 			names = new ArrayList<String>();
-			final String prefix = ctMethod.getName(); // para distinguir metodos
-														// com o mesmo nome e
-														// assinaturas
-														// diferentes
+			final String prefix = ctMethod.getName(); 
+			// para distinguir metodos
+			// com o mesmo nome e
+			// assinaturas
+			// diferentes
 
-		//	System.out.println("> Method Name:\t" + ctMethod.getName() + "\n");
-
+//			System.out.println("> Method Name:\t" + ctMethod.getName() + "\n");
+			CtField treeMapField = CtField.make("public java.util.TreeMap treemap_"+ctMethod.getName()+";", _ctClass);
+			_ctClass.addField(treeMapField);
 			ctMethod.instrument(new ExprEditor() {
 				public void edit(MethodCall m) throws CannotCompileException {
-				//	System.out.println("Class Name:\t" + m.getClassName());
-				//	System.out.println("Method Name:\t" + m.getMethodName());
-				//	System.out.println("Line Number:\t" + m.getLineNumber());
-
-					String[] tokens = m.getClassName().split("\\.");
-					if (tokens.length == 3
-							&& (m.getClassName().contains("java.lang.") || m.getMethodName().contains("alue"))) {
-						//System.out.println(tokens[2]);
+					//					System.out.println("Class Name:\t" + m.getClassName());
+					//					System.out.println("Method Name:\t" + m.getMethodName());
+					//	System.out.println("Line Number:\t" + m.getLineNumber());
+					//	tokens.length == 3
+					//	&& (m.getClassName().contains("java.lang.") || m.getMethodName().contains("alue"))
+					if (checkClass(m.getClassName())) {
+						//
+						// Eg. Class Name:	java.lang.Boolean
+						// token[2] -> Boolean
+						//
+						//	System.out.println(tokens[2]);
+						//						Nao da para ter variaveis com . nos nomes!
+						String[] tokens = m.getClassName().split("\\.");
 						String name = prefix + "_" + tokens[2] + "_" + m.getMethodName();
 						names.add(name); // adicionar name ao ARRAYLIST
-					//	System.out.println("New Variable Name:\t" + name);
-						// cria um contador não final (ou seja, que pode ser
+						//	System.out.println("New Variable Name:\t" + name);
+						// cria um contador nao final (ou seja, que pode ser
 						// incrementado) com o nome especificado
-						createField(name);
-						m.replace("{ $_ = $proceed($$); " + name + "++;  }");
-					}
-				//	System.out.println("");
+//						
+						//COMENTEI ISTO PORQUE A PARTIR DE AGORA USAM SE TREEMAPS
+//						createField(name,ctMethod.getName());
+						
+						//ESTAVA A TENTAR METER VALORES DENTRO DA TREEMAP MAS ELE PEDE QUE O CTMETHOD SEJA FINAL
+						// SE FOR FINAL NAO POSSO ALTERAR A TREEMAP
+						//.....EVERYTHING IS FUCKED
+						//O CODIGO FUNCIONARIA EM TEORIA SE CONSEGUISSESMOS PASSAR BEM O NOME DA TREEMAP PARA AQUI EM BAIXO
 					
-				}
+//						m.replace("{ $_ = $proceed($$);"
+//								+"if(treemap_"+ctMethod.getName()+".containsKey("+name+")){"
+//								+"treemap_"+ctMethod.getName()+".put("+name+",treemap_"+ctMethod.getName()+".get("+name+") + 1);"
+//								+"} else{ treemap_" + ctMethod.getName() +".put("+name+",1);}}");
+//					
+					}
+					}
 			});
-			
-		
-			
-			processFinalFields(ctMethod);
+
+//			for(CtField c : _ctClass.getFields()){
+//				System.out.println("find Tree : "+c.getName());
+//			}
+//			processFinalFields(ctMethod);
 		}
-
 	}
-	// }
 
-	private void processFinalFields(CtMethod ctMethod) throws CannotCompileException {
-
+	protected void processFinalFields(CtMethod ctMethod) throws CannotCompileException {
 		for (CtField ctm : _ctClass.getFields()) {
 			if (ctm.getName().contains(ctMethod.getName())) {
 				String[] tokens = ctm.getName().split("_");
-				String type=new String();
-			
-				if(ctm.getName().matches("(.*)Value")){
-					type=" boxed ";
-				}
-				else if(ctm.getName().matches("(.*)valueOf")){type=" unboxed ";
-				}
 				String classname = ctMethod.getLongName();
-				
-				
-				
+				String type = null;
 				String varType = " java.lang."+tokens[1];
-				
-				
 				String aspa = "\"";
-				String space=" "; 
 				String plus = "+";
-				String all = "{System.out.println("+aspa+classname+aspa+plus+
-													aspa+type+aspa+plus+
-													ctm.getName()+plus+
-													aspa+varType+aspa+");}";
-				
-				//System.out.println(all);
-				
+				if (ctm.getName().matches("(.*)Value")) {
+					type = " unboxed ";
+				}
+				else if (ctm.getName().matches("(.*)valueOf")) {
+					type = " boxed ";
+				}
+				//Printer / String formater
+				String all = "{System.out.println("+
+						aspa+classname+aspa+plus+
+						aspa+type+aspa+plus+
+						ctm.getName()+plus+
+						aspa+varType+aspa+");}";
+
 				ctMethod.insertAfter(all);
 			}
-
 		}
-
-
 	}
 
-	protected void createField(String name) throws CannotCompileException {
-		for (CtField ctm : _ctClass.getFields())
-			if (ctm.getName().equals(name)) {
-				return;
-			}
-		CtField f = CtField.make("public static int " + name + "= 0;", _ctClass);
-		_ctClass.addField(f);
+	protected void createField(String name, String methodName) throws CannotCompileException {
+//		for (CtField ctm : _ctClass.getFields())
+//			if (ctm.getName().equals(name)) {
+//				return;
+//			}
+//		CtField f = CtField.make("public static int " + name + "= 0;", _ctClass);
+//		_ctClass.addField(f);
+//		
 	}
 
+	protected boolean checkClass(String className){
+		switch (className) {
+		case "java.lang.Integer":
+		case "java.lang.Double":
+		case "java.lang.Float":
+		case "java.lang.Long":
+		case "java.lang.Short":
+		case "java.lang.Character":
+		case "java.lang.Byte":
+		case "java.lang.Boolean":
+			return true;
+		default:
+			return false;
+		}
+	}
 }
