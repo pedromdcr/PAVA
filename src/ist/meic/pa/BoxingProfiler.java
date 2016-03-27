@@ -16,7 +16,7 @@ public class BoxingProfiler {
 			System.arraycopy(args, 1, restArgs, 0, restArgs.length);
 			classLoader.run(args[0], restArgs);
 		} catch (Throwable e) {
-			
+			e.printStackTrace();
 		}
 
 	}
