@@ -31,7 +31,7 @@
   	</target>
 
   <target name="run" depends="compile">
-    <jar destfile="${src.dir}/../profiler.jar">
+    <jar destfile="${src.dir}/../boxingProfiler.jar">
         <manifest>
             <attribute name="Main-Class" value="ist.meic.pa.BoxingProfiler"/>
         	<attribute name="Class-Path" value="."/>
@@ -43,7 +43,7 @@
   
   <target name="clean">
     <delete dir="${classes.dir}"/>
-  	
+  	<delete file="boxingProfiler.jar" />
  </target>
 
 </project>
