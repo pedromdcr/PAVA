@@ -3,6 +3,8 @@ package ist.meic.pa;
 //import java.util.ArrayList;
 //import java.util.List;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
@@ -37,6 +39,22 @@ public class MyProfiler implements Translator {
 
 	protected void make(ClassPool pool) throws NotFoundException,
 			CannotCompileException {
+		
+//		// Create a stream to hold the output
+//	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//	    PrintStream ps = new PrintStream(baos);
+//	    // IMPORTANT: Save the old System.out!
+//	    PrintStream old = System.err;
+//	    // Tell Java to use your special stream
+//	    System.setErr(ps);
+//	    // Print some output: goes to your special stream
+//	    System.out.println("Foofoofoo!");
+//	    // Put things back
+//	    System.out.flush();
+//	    System.setOut(old);
+//	    // Show what happened
+//	    System.out.println("Here: " + baos.toString());
+		
 		for (CtMethod ctMethod : _ctClass.getDeclaredMethods()) {
 
 			// names = new ArrayList<String>();
@@ -51,8 +69,8 @@ public class MyProfiler implements Translator {
 								+ tokens[2] + "_" + prefix;
 						String injection = null;
 						if (!dictionary.containsValue(name)) {
-							dictionary.put(globalID, name);
 							globalID = globalID + 1;
+							dictionary.put(globalID, name);
 							injection = id + "_" + globalID;
 							
 						} else {
@@ -79,6 +97,7 @@ public class MyProfiler implements Translator {
 
 		}
 		processFinalFields();
+		
 	}
 
 	protected void processFinalFields() throws CannotCompileException,
@@ -109,9 +128,9 @@ public class MyProfiler implements Translator {
 						type = " boxed ";
 					}
 					// Printer / String formater
-					String all = "{System.err.println(" + aspa + classname + aspa
+					String all ="{if("+ctm.getName()+"!=0){System.err.println(" + aspa + classname + aspa
 							+ plus + aspa + type + aspa + plus + ctm.getName()
-							+ plus + aspa + varType + aspa + ");}";
+							+ plus + aspa + varType + aspa + ");}}";
 					
 					String key = classname + " " + varType + " " + type;
 					storage.put(key, all);
