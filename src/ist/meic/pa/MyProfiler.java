@@ -3,11 +3,16 @@ package ist.meic.pa;
 //import java.util.ArrayList;
 //import java.util.List;
 
+import java.util.Map;
+import java.util.Random;
+import java.util.TreeMap;
+
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
 import javassist.CtMethod;
+import javassist.CtPrimitiveType;
 import javassist.NotFoundException;
 import javassist.Translator;
 import javassist.expr.ExprEditor;
@@ -15,87 +20,126 @@ import javassist.expr.MethodCall;
 
 public class MyProfiler implements Translator {
 	private CtClass _ctClass;
-	//	private List<String> names;
+	// private List<String> names;
+	public TreeMap<Long, String> dictionary = new TreeMap<Long, String>();
 
-	public void start(ClassPool pool) throws NotFoundException, CannotCompileException {
+	public void start(ClassPool pool) throws NotFoundException,
+			CannotCompileException {
 	}
 
-	public void onLoad(ClassPool pool, String className) throws NotFoundException, CannotCompileException {
+	public void onLoad(ClassPool pool, String className)
+			throws NotFoundException, CannotCompileException {
 		_ctClass = pool.get(className);
 		make(pool);
 	}
 
-	protected void make(ClassPool pool) 
-			throws NotFoundException, CannotCompileException {
+	Long globalID = 0L;
+
+	protected void make(ClassPool pool) throws NotFoundException,
+			CannotCompileException {
 		for (CtMethod ctMethod : _ctClass.getDeclaredMethods()) {
+
 			// names = new ArrayList<String>();
-			final String prefix = ctMethod.getName(); 
+			final String id = "BoxingProfiler";
+			final String prefix = ctMethod.getLongName();
 			// para distinguir metodos com o mesmo nome e assinaturas diferentes
 			ctMethod.instrument(new ExprEditor() {
 				public void edit(MethodCall m) throws CannotCompileException {
-					if (checkClass(m.getClassName())) {
+					if (checkClass(m.getMethodName())) {
 						String[] tokens = m.getClassName().split("\\.");
-						String name = prefix + "_" + tokens[2] + "_" + m.getMethodName();
-						//	names.add(name); // adicionar name ao ARRAYLIST
-						//	System.out.println("New Variable Name:\t" + name);
-						createField(name);
-						m.replace("{ $_ = $proceed($$);"+name+"++;}");
+						String name = id + "_" + m.getMethodName() + "_"
+								+ tokens[2] + "_" + prefix;
+						String injection = null;
+						if (!dictionary.containsValue(name)) {
+							dictionary.put(globalID, name);
+							globalID = globalID + 1;
+							injection = id + "_" + globalID;
+							
+						} else {
+							for (Map.Entry<Long, String> entry : dictionary.entrySet()) {
+								if(entry.getValue().equals(name)) {
+									injection = id + "_" + entry.getKey();
+								} 
+								
+							}
+						}
+
+						createField(injection);
+
+						// System.out.println(globalID);
+
+						// System.out.println("New Variable Name:\t" + name);
+						// System.out.println("to string: "+globalID.toString());
+
+					//	 System.out.println(injection);
+						m.replace("{ $_ = $proceed($$);" + injection + "++;}");
 					}
 				}
 			});
-			processFinalFields(ctMethod);
+
 		}
+		processFinalFields();
 	}
 
-	protected void processFinalFields(CtMethod ctMethod) throws CannotCompileException {
+	protected void processFinalFields() throws CannotCompileException,
+			NotFoundException {
+		TreeMap<String, String> storage = new TreeMap<String, String>();
 		for (CtField ctm : _ctClass.getFields()) {
-			if (ctm.getName().contains(ctMethod.getName())) {
-				String[] tokens = ctm.getName().split("_");
-				String classname = ctMethod.getLongName();
-				String type = null;
-				String varType = " java.lang."+tokens[1];
-				String aspa = "\"";
-				String plus = "+";
-				if (ctm.getName().matches("(.*)Value")) {
-					type = " unboxed ";
-				}
-				else if (ctm.getName().matches("(.*)valueOf")) {
-					type = " boxed ";
-				}
-				//Printer / String formater
-				String all = "{System.out.println("+
-						aspa+classname+aspa+plus+
-						aspa+type+aspa+plus+
-						ctm.getName()+plus+
-						aspa+varType+aspa+");}";
 
-				ctMethod.insertAfter(all);
+			if (ctm.getName().contains("BoxingProfiler")) {
+
+				String[] tokens = ctm.getName().split("_");
+				Long _NUM = Long.parseLong(tokens[1]);
+				//System.out.println(ctm.getName());
+				String truetype = null;
+				if (dictionary.containsKey(_NUM)) {
+					truetype = dictionary.get(_NUM);
+					String[] tokenTrue = truetype.split("_");
+					// System.out.println("TOKEN TRUE :" +tokenTrue[3]);
+					
+					String classname = tokenTrue[3];
+					
+					String type = null;
+					String varType = " java.lang." + tokenTrue[2];
+					String aspa = "\"";
+					String plus = "+";
+					if (tokenTrue[1].matches("(.*)Value")) {
+						type = " unboxed ";
+					} else if (tokenTrue[1].matches("(.*)valueOf")) {
+						type = " boxed ";
+					}
+					// Printer / String formater
+					String all = "{System.err.println(" + aspa + classname + aspa
+							+ plus + aspa + type + aspa + plus + ctm.getName()
+							+ plus + aspa + varType + aspa + ");}";
+					
+					String key = classname + " " + varType + " " + type;
+					storage.put(key, all);
+//					System.out.println(truetype);
+				} 
 			}
 		}
+		CtMethod main = _ctClass.getDeclaredMethod("main");
+		for (Map.Entry<String, String> entry : storage.entrySet()) {
+			main.insertAfter(entry.getValue());
+		}
 	}
 
-	protected void createField(String name) throws CannotCompileException {
+	protected void createField(String var) throws CannotCompileException {
 		for (CtField ctm : _ctClass.getFields())
-			if (ctm.getName().equals(name)) {
+			if (ctm.getName().equals(var)) {
 				return;
 			}
-		CtField f = CtField.make("public static int " + name + "= 0;", _ctClass);
+
+		CtField f = CtField.make("public static int " + var + "= 0;", _ctClass);
 		_ctClass.addField(f);
 	}
 
-	protected boolean checkClass(String className){
-		switch (className) {
-		case "java.lang.Integer":
-		case "java.lang.Double":
-		case "java.lang.Float":
-		case "java.lang.Long":
-		case "java.lang.Short":
-		case "java.lang.Character":
-		case "java.lang.Byte":
-		case "java.lang.Boolean":
+	protected boolean checkClass(String className) {
+		// System.out.println(className);
+		if (className.matches("(.*)Value") || className.matches("(.*)valueOf")) {
 			return true;
-		default:
+		} else
 			return false;
-		}
 	}
 }
