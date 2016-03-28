@@ -1,7 +1,7 @@
 package ist.meic.pa;
 
-import java.util.ArrayList;
-import java.util.List;
+//import java.util.ArrayList;
+//import java.util.List;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -15,7 +15,7 @@ import javassist.expr.MethodCall;
 
 public class MyProfiler implements Translator {
 	private CtClass _ctClass;
-	private List<String> names;
+	//	private List<String> names;
 
 	public void start(ClassPool pool) throws NotFoundException, CannotCompileException {
 	}
@@ -25,62 +25,25 @@ public class MyProfiler implements Translator {
 		make(pool);
 	}
 
-	protected void make(ClassPool pool) throws NotFoundException, CannotCompileException {
-		//System.out.println("-> MyProfiler.make");
-
+	protected void make(ClassPool pool) 
+			throws NotFoundException, CannotCompileException {
 		for (CtMethod ctMethod : _ctClass.getDeclaredMethods()) {
-			names = new ArrayList<String>();
+			// names = new ArrayList<String>();
 			final String prefix = ctMethod.getName(); 
-			// para distinguir metodos
-			// com o mesmo nome e
-			// assinaturas
-			// diferentes
-
-//			System.out.println("> Method Name:\t" + ctMethod.getName() + "\n");
-			CtField treeMapField = CtField.make("public java.util.TreeMap treemap_"+ctMethod.getName()+";", _ctClass);
-			_ctClass.addField(treeMapField);
+			// para distinguir metodos com o mesmo nome e assinaturas diferentes
 			ctMethod.instrument(new ExprEditor() {
 				public void edit(MethodCall m) throws CannotCompileException {
-					//					System.out.println("Class Name:\t" + m.getClassName());
-					//					System.out.println("Method Name:\t" + m.getMethodName());
-					//	System.out.println("Line Number:\t" + m.getLineNumber());
-					//	tokens.length == 3
-					//	&& (m.getClassName().contains("java.lang.") || m.getMethodName().contains("alue"))
 					if (checkClass(m.getClassName())) {
-						//
-						// Eg. Class Name:	java.lang.Boolean
-						// token[2] -> Boolean
-						//
-						//	System.out.println(tokens[2]);
-						//						Nao da para ter variaveis com . nos nomes!
 						String[] tokens = m.getClassName().split("\\.");
 						String name = prefix + "_" + tokens[2] + "_" + m.getMethodName();
-						names.add(name); // adicionar name ao ARRAYLIST
+						//	names.add(name); // adicionar name ao ARRAYLIST
 						//	System.out.println("New Variable Name:\t" + name);
-						// cria um contador nao final (ou seja, que pode ser
-						// incrementado) com o nome especificado
-//						
-						//COMENTEI ISTO PORQUE A PARTIR DE AGORA USAM SE TREEMAPS
-//						createField(name,ctMethod.getName());
-						
-						//ESTAVA A TENTAR METER VALORES DENTRO DA TREEMAP MAS ELE PEDE QUE O CTMETHOD SEJA FINAL
-						// SE FOR FINAL NAO POSSO ALTERAR A TREEMAP
-						//.....EVERYTHING IS FUCKED
-						//O CODIGO FUNCIONARIA EM TEORIA SE CONSEGUISSESMOS PASSAR BEM O NOME DA TREEMAP PARA AQUI EM BAIXO
-					
-//						m.replace("{ $_ = $proceed($$);"
-//								+"if(treemap_"+ctMethod.getName()+".containsKey("+name+")){"
-//								+"treemap_"+ctMethod.getName()+".put("+name+",treemap_"+ctMethod.getName()+".get("+name+") + 1);"
-//								+"} else{ treemap_" + ctMethod.getName() +".put("+name+",1);}}");
-//					
+						createField(name);
+						m.replace("{ $_ = $proceed($$);"+name+"++;}");
 					}
-					}
+				}
 			});
-
-//			for(CtField c : _ctClass.getFields()){
-//				System.out.println("find Tree : "+c.getName());
-//			}
-//			processFinalFields(ctMethod);
+			processFinalFields(ctMethod);
 		}
 	}
 
@@ -111,14 +74,13 @@ public class MyProfiler implements Translator {
 		}
 	}
 
-	protected void createField(String name, String methodName) throws CannotCompileException {
-//		for (CtField ctm : _ctClass.getFields())
-//			if (ctm.getName().equals(name)) {
-//				return;
-//			}
-//		CtField f = CtField.make("public static int " + name + "= 0;", _ctClass);
-//		_ctClass.addField(f);
-//		
+	protected void createField(String name) throws CannotCompileException {
+		for (CtField ctm : _ctClass.getFields())
+			if (ctm.getName().equals(name)) {
+				return;
+			}
+		CtField f = CtField.make("public static int " + name + "= 0;", _ctClass);
+		_ctClass.addField(f);
 	}
 
 	protected boolean checkClass(String className){
